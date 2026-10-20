@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dawa-navy: #002040;
+  --color-dawa-green: #007838;
+  --color-dawa-dark-green: #006020;
+  --color-dawa-bright-green: #108040;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
