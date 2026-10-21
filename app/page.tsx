@@ -83,9 +83,18 @@ export default function Home() {
   const [askSent, setAskSent] = useState(false);
 
   // Load inventory from localStorage on mount so admin updates reflect live
-  useEffect(() => {
-    setCatalogue(getStoredDrugs());
-  }, []);
+ // Load inventory from Cloud Firestore on mount
+useEffect(() => {
+  async function loadCatalogue() {
+    try {
+      const drugs = await getStoredDrugs();
+      setCatalogue(drugs);
+    } catch (error) {
+      console.error("Failed to load catalogue from Firestore:", error);
+    }
+  }
+  loadCatalogue();
+}, []);
 
   /* ---------- pricing ---------- */
   const unitPrice = (p: MedicineProduct) =>
