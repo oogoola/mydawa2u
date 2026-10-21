@@ -1,5 +1,8 @@
+import { db } from "./firebase";
+import { collection, getDocs, addDoc, getDoc, doc } from "firebase/firestore";
+
 export interface Drug {
-  id: string;
+  id?: string;
   name: string;
   activeIngredient: string;
   strength?: string;
@@ -13,7 +16,7 @@ export interface Drug {
   image?: string;
 }
 
-// Default initial catalogue if nothing is stored yet
+// Default initial catalogue to seed if database is empty
 const defaultDrugs: Drug[] = [
   {
     id: 'MED-001',
@@ -42,23 +45,34 @@ const defaultDrugs: Drug[] = [
   }
 ];
 
-export function getStoredDrugs(): Drug[] {
-  if (typeof window === 'undefined') return defaultDrugs;
-  const stored = localStorage.getItem('dawa2u_catalogue');
-  if (!stored) {
-    localStorage.setItem('dawa2u_catalogue', JSON.stringify(defaultDrugs));
-    return defaultDrugs;
-  }
+// Fetch all drugs from Firestore
+export async function getStoredDrugs(): Promise<Drug[]> {
   try {
-    return JSON.parse(stored);
-  } catch {
+    const querySnapshot = await getDocs(collection(db, "drugs"));
+    if (querySnapshot.empty) {
+      // Optional: seed default drugs if collection is completely empty
+      return defaultDrugs;
+    }
+    const drugs: Drug[] = [];
+    querySnapshot.forEach((docSnap) => {
+      drugs.push({ id: docSnap.id, ...docSnap.data() } as Drug);
+    });
+    return drugs;
+  } catch (error) {
+    console.error("Error fetching drugs from Firestore:", error);
     return defaultDrugs;
   }
 }
 
-export function saveNewDrug(newDrug: Drug) {
-  if (typeof window === 'undefined') return;
-  const current = getStoredDrugs();
-  const updated = [newDrug, ...current];
-  localStorage.setItem('dawa2u_catalogue', JSON.stringify(updated));
+// Save a new drug directly to Cloud Firestore
+export async function saveNewDrug(newDrug: Drug): Promise<void> {
+  try {
+    await addDoc(collection(db, "drugs"), {
+      ...newDrug,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error saving drug to Firestore:", error);
+    throw error;
+  }
 }
