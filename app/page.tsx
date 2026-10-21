@@ -28,7 +28,7 @@ import {
 import { getStoredDrugs, Drug as MedicineProduct } from '@/lib/storage';
 
 /* ------------------------------------------------------------------ */
-/* Types                                                              */
+/* Types                                                             */
 /* ------------------------------------------------------------------ */
 interface CartItem {
   product: MedicineProduct;
@@ -82,19 +82,18 @@ export default function Home() {
   const [askForm, setAskForm] = useState({ name: '', phone: '', question: '' });
   const [askSent, setAskSent] = useState(false);
 
-  // Load inventory from localStorage on mount so admin updates reflect live
- // Load inventory from Cloud Firestore on mount
-useEffect(() => {
-  async function loadCatalogue() {
-    try {
-      const drugs = await getStoredDrugs();
-      setCatalogue(drugs);
-    } catch (error) {
-      console.error("Failed to load catalogue from Firestore:", error);
+  // Load inventory from Cloud Firestore on mount
+  useEffect(() => {
+    async function loadCatalogue() {
+      try {
+        const drugs = await getStoredDrugs();
+        setCatalogue(drugs);
+      } catch (error) {
+        console.error("Failed to load catalogue from Firestore:", error);
+      }
     }
-  }
-  loadCatalogue();
-}, []);
+    loadCatalogue();
+  }, []);
 
   /* ---------- pricing ---------- */
   const unitPrice = (p: MedicineProduct) =>
@@ -307,7 +306,7 @@ useEffect(() => {
       </section>
 
       {/* Main grid */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
 
         {/* Sidebar */}
         <aside className="space-y-6">
@@ -341,14 +340,14 @@ useEffect(() => {
 
         {/* Product grid */}
         <section className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 px-2 sm:px-0">
             <p className="text-sm text-slate-500">
               Showing <span className="font-bold text-[#002040]">{filteredProducts.length}</span> product{filteredProducts.length !== 1 && 's'}
             </p>
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+            <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center mx-2 sm:mx-0">
               <Pill className="w-8 h-8 text-slate-300 mx-auto mb-3" />
               <p className="font-bold text-[#002040]">No medicines found</p>
               <p className="text-sm text-slate-500 mt-1">
@@ -358,14 +357,15 @@ useEffect(() => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            /* UPDATED: grid-cols-2 for mobile side-by-side layout */
+            <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
               {filteredProducts.map(product => (
-                <article key={product.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden">
-                  <div className="h-44 bg-emerald-50/60 flex items-center justify-center relative p-4">
-                    <span className={`absolute top-3 left-3 text-[10px] font-black px-2 py-1 rounded-full z-10 ${
+                <article key={product.id} className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden">
+                  <div className="h-32 sm:h-44 bg-emerald-50/60 flex items-center justify-center relative p-2 sm:p-4">
+                    <span className={`absolute top-2 left-2 sm:top-3 sm:left-3 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full z-10 ${
                       product.prescriptionRequired ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-[#007838]'
                     }`}>
-                      {product.prescriptionRequired ? 'Rx REQUIRED' : 'OTC'}
+                      {product.prescriptionRequired ? 'Rx REQ' : 'OTC'}
                     </span>
 
                     {product.image ? (
@@ -375,41 +375,41 @@ useEffect(() => {
                         className="max-h-full max-w-full object-contain"
                       />
                     ) : (
-                      <Pill className="w-12 h-12 text-[#007838]/60" />
+                      <Pill className="w-10 h-10 sm:w-12 sm:h-12 text-[#007838]/60" />
                     )}
                   </div>
 
-                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{product.category}</p>
-                      <h2 className="font-extrabold text-[#002040] mt-1 text-base">{product.name}</h2>
-                      <p className="text-xs text-slate-500">{product.activeIngredient}</p>
-                      <p className="text-xs text-slate-400 mt-1">
+                  <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-4">
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <p className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400 truncate">{product.category}</p>
+                      <h2 className="font-extrabold text-[#002040] text-sm sm:text-base line-clamp-1">{product.name}</h2>
+                      <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1">{product.activeIngredient}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-400 truncate">
                         {[product.strength, product.form, product.packSize].filter(Boolean).join(' · ')}
                       </p>
                     </div>
 
                     {product.warningText && (
-                      <div className="flex gap-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded-lg p-2.5">
+                      <div className="hidden sm:flex gap-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded-lg p-2.5">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
                         <span>{product.warningText}</span>
                       </div>
                     )}
 
-                    <div className="pt-2 border-t border-slate-100 flex items-end justify-between">
+                    <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                       <div>
-                        <p className="text-lg font-black text-[#002040]">{formatKsh(unitPrice(product))}</p>
+                        <p className="text-sm sm:text-lg font-black text-[#002040]">{formatKsh(unitPrice(product))}</p>
                         {accountMode === 'b2b' && (
-                          <p className="text-[10px] text-slate-400 line-through">{formatKsh(product.priceKsh)}</p>
+                          <p className="text-[9px] sm:text-[10px] text-slate-400 line-through">{formatKsh(product.priceKsh)}</p>
                         )}
-                        <p className={`text-[11px] font-semibold ${product.inStock ? 'text-[#007838]' : 'text-red-600'}`}>
+                        <p className={`text-[10px] sm:text-[11px] font-semibold ${product.inStock ? 'text-[#007838]' : 'text-red-600'}`}>
                           {product.inStock ? 'In stock' : 'Out of stock'}
                         </p>
                       </div>
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={!product.inStock}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                        className={`w-full sm:w-auto px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition shadow-sm ${
                           !product.inStock
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                             : product.prescriptionRequired
@@ -417,7 +417,7 @@ useEffect(() => {
                               : 'bg-[#007838] hover:bg-[#005828] text-white'
                         }`}
                       >
-                        {product.prescriptionRequired ? 'Upload Rx to Order' : 'Add to Cart'}
+                        {product.prescriptionRequired ? 'Upload Rx' : 'Add to Cart'}
                       </button>
                     </div>
                   </div>
@@ -518,7 +518,6 @@ useEffect(() => {
         </div>
       </footer>
 
-      {/* Cart Drawer & Prescription Modals can remain appended here... */}
     </div>
   );
 }
