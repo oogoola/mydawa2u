@@ -56,7 +56,8 @@ export default function AddDrugPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -77,8 +78,8 @@ export default function AddDrugPage() {
         image: imageBase64
       };
 
-      // Save directly into localStorage for instant customer storefront synchronization
-      saveNewDrug(newDrug);
+      // Save asynchronously to Cloud Firestore for real-time customer storefront synchronization
+      await saveNewDrug(newDrug);
 
       setSuccessMessage(true);
       setForm({
@@ -97,11 +98,18 @@ export default function AddDrugPage() {
 
       setTimeout(() => setSuccessMessage(false), 4000);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to save drug to Firestore:", err);
+      alert("Error saving drug: " + (err as Error).message);
     } finally {
       setLoading(false);
     }
   };
+
+
+
+
+
+
 
   // 1. PASSWORD GATE SCREEN
   if (!isAuthenticated) {
