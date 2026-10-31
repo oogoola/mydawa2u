@@ -1,5 +1,8 @@
+import { db } from "@/lib/firebase";
+import { collection, addDoc, getDocs, query } from "firebase/firestore";
+
 export interface Drug {
-  id: string;
+  id?: string;
   name: string;
   activeIngredient: string;
   strength?: string;
@@ -13,7 +16,7 @@ export interface Drug {
   image?: string;
 }
 
-// Default initial catalogue if nothing is stored yet
+// Default initial catalogue fallback
 const defaultDrugs: Drug[] = [
   {
     id: 'MED-001',
@@ -42,23 +45,42 @@ const defaultDrugs: Drug[] = [
   }
 ];
 
-export function getStoredDrugs(): Drug[] {
-  if (typeof window === 'undefined') return defaultDrugs;
-  const stored = localStorage.getItem('dawa2u_catalogue');
-  if (!stored) {
-    localStorage.setItem('dawa2u_catalogue', JSON.stringify(defaultDrugs));
-    return defaultDrugs;
-  }
+/**
+ * Fetch all products from Cloud Firestore (with fallback if offline)
+ */
+export async function getStoredDrugs(): Promise<Drug[]> {
   try {
-    return JSON.parse(stored);
-  } catch {
+    const q = query(collection(db, "products"));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return defaultDrugs;
+    }
+
+    const drugs: Drug[] = [];
+    querySnapshot.forEach((doc) => {
+      drugs.push({ id: doc.id, ...doc.data() } as Drug);
+    });
+    return drugs;
+  } catch (error) {
+    console.error("Error fetching from Firestore, falling back:", error);
     return defaultDrugs;
   }
 }
 
-export function saveNewDrug(newDrug: Drug) {
-  if (typeof window === 'undefined') return;
-  const current = getStoredDrugs();
-  const updated = [newDrug, ...current];
-  localStorage.setItem('dawa2u_catalogue', JSON.stringify(updated));
+/**
+ * Save a new drug directly to Cloud Firestore 'products' collection
+ */
+export async function saveNewDrug(newDrug: Drug): Promise<void> {
+  try {
+    // This automatically creates the "products" collection in Firestore if it doesn't exist
+    await addDoc(collection(db, "products"), {
+      ...newDrug,
+      createdAt: new Date().toISOString()
+    });
+    console.log("Product successfully saved to Firestore!");
+  } catch (error) {
+    console.error("Error writing product to Firestore:", error);
+    throw error;
+  }
 }
